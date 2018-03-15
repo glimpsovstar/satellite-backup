@@ -9,16 +9,16 @@ This has been tested on Red Hat Satellite Server 6.2 and 6.3
 ## Requirements
   - Packages gzip and mail installed
   - Server is configured to send mail
-  - Satellite installed and configured with katello-backup available
+  - Satellite installed and configured with katello-backup (6.2) or satellite-backup (6.3) available
   - Backup Retention understood and plugged into the script's variables
   - Email address to send backup reports to plugged into the script's variables
 
 ## Usage
-    satellite_backup.sh  [full|incremental] [-d </backup_directory>]
+    satellite_backup.sh -t [full|incremental] [-d </backup_directory>]
     eg - schedule this to run weekly
-    satellite_backup.sh full -d /app/satellite/backup
+    satellite_backup.sh -t full -d /app/satellite/backup
     eg - schedule tihs to run daily
-    satellite_backup.sh incremental -d /app/satellite/backup
+    satellite_backup.sh -t incremental -d /app/satellite/backup
     
 ## Recovery
 

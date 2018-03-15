@@ -141,7 +141,7 @@ atexit()
 run_satver_validation()
 {
 	SAT_VER=$(yum info satellite |grep Version |awk -F ': ' '{print $2}' |cut -c 1-3)
-	case $TYPE in
+	case $SAT_VER in
 	        6.1|6.2)
 			BACKUP_UTILITY=katello-backup
 	        ;;
@@ -237,7 +237,7 @@ run_incremental()
         echo "$TYPE backup of Satellite started at $(date)"
         echo "================================================================"
 
-	if [ $(find ${BACKUP_DIRECTORY}/full |grep -c katello-backup) -gt 0 ]
+	if [ $(find ${BACKUP_DIRECTORY}/full |egrep -c 'katello-backup|satellite-backup') -gt 0 ]
 	then
                 LASTFULL=$(find ${BACKUP_DIRECTORY}/full -type d |sort -rn |head -1)
                 $BACKUP_UTILITY ${BACKUP_DIRECTORY}/incr --incremental ${LASTFULL} --assumeyes 
@@ -271,7 +271,7 @@ run_expiration()
         echo "================================================================"
 
 	msg Removing Daily Incremental Backups - ${RETENTION} days
-	for incr_dir in $(/usr/bin/find ${BACKUP_DIRECTORY}/incr -type d -mtime +${RETENTION} -name "*katello-backup*")
+	for incr_dir in $(/usr/bin/find ${BACKUP_DIRECTORY}/incr -type d -mtime +${RETENTION} -name "*katello-backup*" -o -name "*satellite-backup*")
 	do
 		msg70 Removing $incr_dir
 		rm -rf $incr_dir
@@ -288,7 +288,7 @@ run_expiration()
 	done
 
 	msg Removing Weekly Full Backups - ${RETENTION} days plus 7 to cater for a weeks worth of incrementals tied to the full
-	for full_dir in $(/usr/bin/find ${BACKUP_DIRECTORY}/full -type d -mtime +$(( $RETENTION + 7)) -name "*katello-backup*")
+	for full_dir in $(/usr/bin/find ${BACKUP_DIRECTORY}/full -type d -mtime +$(( $RETENTION + 7)) -name "*katello-backup*" -o "*satellite-backup*")
 	do
 		msg70 Removing $full_dir
 		rm -rf $full_dir
