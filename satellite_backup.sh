@@ -33,7 +33,6 @@ TAG=$(date '+%Y%m%d-%H%M')
 LOCKFILE=/tmp/.$(basename $0).lck
 LOGDIR=/var/log/satellite_backup
 LOG=${LOGDIR}/satellite_backup.log
-WEEKDAY=$(date +%u)
 SCRIPTNAME=${0##*/}
 MSGS=true
 ERRS=true
@@ -85,7 +84,7 @@ generate_lock()
         if [ -f ${LOCKFILE} ]
         then
                 Pid=$(cat $LOCKFILE)
-                if ps -fp $Pid > /dev/null 2>&1
+                if ps -fp $Pid  > /dev/null 2>&1
                 then
                         MSG="$SCRIPTNAME [ Pid: $Pid ] already running on ${SID} please investigate"
                         cat $LOG | mail -s "$MSG" $ALERTS
@@ -102,6 +101,14 @@ generate_lock()
 atexit()
 # exit routine
 {
+	katello-service status >/dev/null
+	rv=$?
+	if [ $rv -ne 0 ]
+	then
+	        msg "Starting Satellite as it is not running - something must have gone wrong"
+	        katello-service start
+	fi
+
         if [ $RV -gt 0 ]
         then
                 MSG="An error occurred whilst performing a ${TYPE} Satellite Backup on $(hostname -s)"
@@ -139,9 +146,10 @@ run_backupdir_validation()
 	else
 		msg Backup Directory $BACKUP_DIRECTORY either does not exist or is not writable
 		RV=10
+		exit
 	fi
 
-	msg70 Checking for Stale NFS Mounts
+	msg70 Checking Stale NFS Mounts
 	read -t1 < <(stat -t "${BACKUP_DIRECTORY}")
         rv=$?
         if [ $rv -eq 0 ]
@@ -154,6 +162,22 @@ run_backupdir_validation()
 		exit
         fi
 
+	msg70 Estimating Space Requirements vs Available Space
+	EST_SIZE=$(( $(for directory in /var/lib/mongodb /var/lib/pulp /var/lib/pgsql; do du -ms $directory |awk '{print $1}'; done | tr "\n" "+" ) 0 ))
+	BACKUP_DIR_FREE_SPACE=$(df -Pm ${BACKUP_DIRECTORY} |awk '{print $4}' |grep -v Available)
+
+	if [ $EST_SIZE -gt $BACKUP_DIR_FREE_SPACE ]
+	then
+		failed
+		echo "Estimated Backup size is $EST_SIZE megabytes."
+		echo "Free space in $BACKUP_DIRECTORY is $BACKUP_DIR_FREE_SPACE megabytes"
+		echo "Insufficent space to run a backup"
+		RV=999
+		exit
+	else
+		ok
+	fi
+	
 	if [ ! -d ${BACKUP_DIRECTORY}/incr ]
 	then
 		mkdir -p ${BACKUP_DIRECTORY}/incr
@@ -262,7 +286,7 @@ run_expiration()
 	done
 
         echo "================================================================"
-        echo "$Satellite Backup Expiration ended at $(date)"
+        echo "Satellite Backup Expiration ended at $(date)"
         echo "================================================================"
 }
 
