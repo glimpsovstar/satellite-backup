@@ -17,7 +17,7 @@ This has been tested on Red Hat Satellite Server 6.2 and 6.3
     satellite_backup.sh -t [full|incremental] [-d </backup_directory>]
     eg - schedule this to run weekly
     satellite_backup.sh -t full -d /app/satellite/backup
-    eg - schedule tihs to run daily
+    eg - schedule this to run daily
     satellite_backup.sh -t incremental -d /app/satellite/backup
     
 ## Recovery
