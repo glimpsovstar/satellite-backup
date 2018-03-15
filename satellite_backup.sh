@@ -141,6 +141,19 @@ run_backupdir_validation()
 		RV=10
 	fi
 
+	msg70 Checking for Stale NFS Mounts
+	read -t1 < <(stat -t "${BACKUP_DIRECTORY}")
+        rv=$?
+        if [ $rv -eq 0 ]
+        then
+                ok
+        else
+                failed
+                err "Return value is $rv"
+		RV=11
+		exit
+        fi
+
 	if [ ! -d ${BACKUP_DIRECTORY}/incr ]
 	then
 		mkdir -p ${BACKUP_DIRECTORY}/incr
@@ -166,7 +179,7 @@ run_full()
         else
                 failed
                 err "Return value is $rv"
-		RV=11
+		RV=12
 		exit
         fi
 
@@ -192,7 +205,7 @@ run_incremental()
  	        else
  	                failed
  	                err "Return value is $rv"
- 		        RV=12
+ 		        RV=13
 			exit
   	        fi
 
@@ -226,7 +239,7 @@ run_expiration()
                 else
                         failed
                         err "Return value is $rv"
-			RV=13
+			RV=14
 			exit
                 fi
 	done
@@ -243,7 +256,7 @@ run_expiration()
                 else
                         failed
                         err "Return value is $rv"
-			RV=14
+			RV=15
 			exit
                 fi
 	done
