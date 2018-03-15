@@ -166,6 +166,8 @@ run_full()
         else
                 failed
                 err "Return value is $rv"
+		RV=11
+		exit
         fi
 
         echo "================================================================"
@@ -188,8 +190,10 @@ run_incremental()
 	 	then
 	                ok
  	        else
- 	               failed
- 	               err "Return value is $rv"
+ 	                failed
+ 	                err "Return value is $rv"
+ 		        RV=12
+			exit
   	        fi
 
                 echo "================================================================"
@@ -222,6 +226,8 @@ run_expiration()
                 else
                         failed
                         err "Return value is $rv"
+			RV=13
+			exit
                 fi
 	done
 
@@ -237,6 +243,8 @@ run_expiration()
                 else
                         failed
                         err "Return value is $rv"
+			RV=14
+			exit
                 fi
 	done
 
@@ -299,6 +307,8 @@ case $TYPE in
         ;;
         *)
                 usage "ERROR Unknown Backup Type"
+		RV=666
+		exit
         ;;
 esac
 
