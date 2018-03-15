@@ -12,14 +12,15 @@
 #       RETENTION variable at the top of the script.
 #
 # Dependencies:
-#       Red Hat Satellite 6.2 or above - katello-backup must be available.
+#       Red Hat Satellite 6.2 - katello-backup must be available.
+#	Red Hat Satellite 6.3 - satellite-backup must be available
 #	Packages mail, gzip must be installed and the server must be able to send mail.
 #
 # Disclaimer:
 #	This script is NOT SUPPORTED by Red Hat Global Support Service.
 #
 # Modification History:
-#  v1.0 - 27/10/2015 - Initial Version - Talor Holloway (Red Hat Consulting)
+#  v1.0 - 15/03/2018 - Initial Version - Talor Holloway (Red Hat Consulting)
 #
 # Called by:
 #  root crontab
@@ -137,6 +138,24 @@ atexit()
         exit $RV
 }
 
+run_satver_validation()
+{
+	SAT_VER=$(yum info satellite |grep Version |awk -F ': ' '{print $2}' |cut -c 1-3)
+	case $TYPE in
+	        6.1|6.2)
+			BACKUP_UTILITY=katello-backup
+	        ;;
+	        6.3)
+			BACKUP_UTILITY=satellite-backup
+	        ;;
+	        *)
+	                usage "ERROR Unknown Satellite Version"
+			RV=50
+			exit
+	        ;;
+	esac
+}
+
 run_backupdir_validation()
 {
 	if [ -d $BACKUP_DIRECTORY ] && [ -w $BACKUP_DIRECTORY ]
@@ -195,7 +214,7 @@ run_full()
         echo "$TYPE backup of Satellite started at $(date)"
         echo "================================================================"
 
-	katello-backup ${BACKUP_DIRECTORY}/full --assumeyes
+	$BACKUP_UTILITY ${BACKUP_DIRECTORY}/full --assumeyes
         rv=$?
         if [ $rv -eq 0 ]
         then
@@ -221,7 +240,7 @@ run_incremental()
 	if [ $(find ${BACKUP_DIRECTORY}/full |grep -c katello-backup) -gt 0 ]
 	then
                 LASTFULL=$(find ${BACKUP_DIRECTORY}/full -type d |sort -rn |head -1)
-                katello-backup ${BACKUP_DIRECTORY}/incr --incremental ${LASTFULL} --assumeyes 
+                $BACKUP_UTILITY ${BACKUP_DIRECTORY}/incr --incremental ${LASTFULL} --assumeyes 
 	        rv=$?
  		if [ $rv -eq 0 ]
 	 	then
@@ -329,6 +348,9 @@ exec >$LOG 2>&1
 
 # Call function at the end if the script exists cleanly.
 trap atexit 0
+
+msg "Validating the Satellite Version"
+run_satver_validation
 
 msg "Validating the Backup directory"
 run_backupdir_validation
