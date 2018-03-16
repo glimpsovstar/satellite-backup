@@ -181,21 +181,24 @@ run_backupdir_validation()
 		exit
         fi
 
-	msg70 Estimating Space Requirements vs Available Space
-	EST_SIZE=$(( $(for directory in /var/lib/mongodb /var/lib/pulp /var/lib/pgsql; do du -ms $directory |awk '{print $1}'; done | tr "\n" "+" ) 0 ))
-	BACKUP_DIR_FREE_SPACE=$(df -Pm ${BACKUP_DIRECTORY} |awk '{print $4}' |grep -v Available)
-
-	if [ $EST_SIZE -gt $BACKUP_DIR_FREE_SPACE ]
-	then
-		failed
-		echo "Estimated Backup size is $EST_SIZE megabytes."
-		echo "Free space in $BACKUP_DIRECTORY is $BACKUP_DIR_FREE_SPACE megabytes"
-		echo "Insufficent space to run a backup"
-		RV=999
-		exit
-	else
-		ok
-	fi
+	case $TYPE in
+	        FULL|Full|full)
+			msg70 Estimating Space Requirements vs Available Space
+			EST_SIZE=$(( $(for directory in /var/lib/mongodb /var/lib/pulp /var/lib/pgsql; do du -ms $directory |awk '{print $1}'; done | tr "\n" "+" ) 0 ))
+			BACKUP_DIR_FREE_SPACE=$(df -Pm ${BACKUP_DIRECTORY} |awk '{print $4}' |grep -v Available)
+			if [ $EST_SIZE -gt $BACKUP_DIR_FREE_SPACE ]
+			then
+				failed
+				echo "Estimated Backup size is $EST_SIZE megabytes."
+				echo "Free space in $BACKUP_DIRECTORY is $BACKUP_DIR_FREE_SPACE megabytes"
+				echo "Insufficent space to run a backup"
+				RV=999
+				exit
+			else
+				ok
+			fi
+		;;
+	esac
 	
 	if [ ! -d ${BACKUP_DIRECTORY}/incr ]
 	then
