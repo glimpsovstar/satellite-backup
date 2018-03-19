@@ -291,7 +291,7 @@ run_expiration()
 	done
 
 	msg Removing Weekly Full Backups - ${RETENTION} days plus 7 to cater for a weeks worth of incrementals tied to the full
-	for full_dir in $(/usr/bin/find ${BACKUP_DIRECTORY}/full -type d -mtime +$(( $RETENTION + 7)) -name "*katello-backup*" -o type d -mtime +$(( $RETENTION + 7)) -name "*satellite-backup*")
+	for full_dir in $(/usr/bin/find ${BACKUP_DIRECTORY}/full -type d -mtime +$(( $RETENTION + 7)) -name "*katello-backup*" -o -type d -mtime +$(( $RETENTION + 7)) -name "*satellite-backup*")
 	do
 		msg70 Removing $full_dir
 		rm -rf $full_dir
