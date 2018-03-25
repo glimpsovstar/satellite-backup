@@ -318,7 +318,7 @@ run_expiration()
 #####################################################################################
 
 # Process options have been passed to the script
-while getopts ":t:d:s:" opt
+while getopts ":t:d:s" opt
 do
         case $opt in
                 t)      TYPE=${OPTARG} ;;
