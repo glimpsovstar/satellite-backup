@@ -34,6 +34,7 @@ TAG=$(date '+%Y%m%d-%H%M')
 LOCKFILE=/tmp/.$(basename $0).lck
 LOGDIR=/var/log/satellite_backup
 LOG=${LOGDIR}/satellite_backup.log
+SKIP_OPTIONS=""
 SCRIPTNAME=${0##*/}
 MSGS=true
 ERRS=true
@@ -75,7 +76,7 @@ usage()
         echo
         echo "$MESSAGE"
         echo
-        echo "$0 -t [full|incremental] [-d </backup_directory>]"
+        echo "$0 -t [full|incremental] -d [</backup_directory>] [-s]"
         echo
         exit 1
 }
@@ -217,7 +218,7 @@ run_full()
         echo "$TYPE backup of Satellite started at $(date)"
         echo "================================================================"
 
-	$BACKUP_UTILITY ${BACKUP_DIRECTORY}/full --assumeyes
+	$BACKUP_UTILITY ${BACKUP_DIRECTORY}/full --assumeyes ${SKIP_OPTIONS}
         rv=$?
         if [ $rv -eq 0 ]
         then
@@ -243,7 +244,7 @@ run_incremental()
 	if [ $(find ${BACKUP_DIRECTORY}/full |egrep -c 'katello-backup|satellite-backup') -gt 0 ]
 	then
                 LASTFULL=$(find ${BACKUP_DIRECTORY}/full -type d |sort -rn |head -1)
-                $BACKUP_UTILITY ${BACKUP_DIRECTORY}/incr --incremental ${LASTFULL} --assumeyes 
+                $BACKUP_UTILITY ${BACKUP_DIRECTORY}/incr --incremental ${LASTFULL} --assumeyes ${SKIP_OPTIONS}
 	        rv=$?
  		if [ $rv -eq 0 ]
 	 	then
@@ -317,11 +318,12 @@ run_expiration()
 #####################################################################################
 
 # Process options have been passed to the script
-while getopts ":t:d:" opt
+while getopts ":t:d:s:" opt
 do
         case $opt in
                 t)      TYPE=${OPTARG} ;;
                 d)      BACKUP_DIRECTORY=${OPTARG} ;;
+		s)	SKIP_OPTIONS="--skip-pulp-content" ;;
                 *)      usage "ERROR: Unknown Option"; exit ;;
         esac
 done
