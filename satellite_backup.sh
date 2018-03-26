@@ -141,7 +141,7 @@ atexit()
 
 run_satver_validation()
 {
-	SAT_VER=$(yum info satellite |grep Version |awk -F ': ' '{print $2}' |cut -c 1-3)
+	SAT_VER=$(rpm -qi satellite |grep Version |awk -F ': ' '{print $2}' |cut -c 1-3)
 	case $SAT_VER in
 	        6.1|6.2)
 			BACKUP_UTILITY=katello-backup
